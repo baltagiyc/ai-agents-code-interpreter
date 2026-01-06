@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 
-# Ajoute le dossier courant au PYTHONPATH pour que les imports locaux marchent
 sys.path.insert(0, str(Path(__file__).parent))
 
 from dotenv import load_dotenv
@@ -11,32 +10,29 @@ from nodes import run_agent_reasoning, tool_node
 
 load_dotenv()
 
-AGENT_REASON="agent_reason"
-ACT="act"
-LAST=-1
+AGENT_REASON = "agent_reason"
+ACT = "act"
+LAST = -1
 
-def should_continue(state: MessagesState)->str:
-    if not state ["messages"][LAST].tool_calls:
+
+def should_continue(state: MessagesState) -> str:
+    if not state["messages"][LAST].tool_calls:
         return END
     return ACT
+
 
 flow = StateGraph(MessagesState)
 flow.add_node(AGENT_REASON, run_agent_reasoning)
 flow.add_node(ACT, tool_node)
 
-# Point d'entrée : on commence par le node agent_reason
 flow.set_entry_point(AGENT_REASON)
 
-flow.add_conditional_edges(AGENT_REASON, should_continue, {
-    END:END,
-    ACT:ACT
-})
+flow.add_conditional_edges(AGENT_REASON, should_continue, {END: END, ACT: ACT})
 
 flow.add_edge(ACT, AGENT_REASON)
 
 app = flow.compile()
 
-# Sauvegarder le graphe en image (optionnel)
 try:
     app.get_graph().draw_mermaid_png(output_file_path="flow.png")
     print("📊 Graphe sauvegardé dans flow.png")
@@ -47,12 +43,17 @@ if __name__ == "__main__":
     print("\n" + "=" * 50)
     print("🚀 Lancement de l'agent ReAct LangGraph")
     print("=" * 50 + "\n")
-    
-    # Test avec une question simple
-    result = app.invoke({
-        "messages": [HumanMessage(content="C'est quoi la météo le 16/12/2025 à Paris saint-lazare ? Triple cette valeur.")]
-    })
-    
+
+    result = app.invoke(
+        {
+            "messages": [
+                HumanMessage(
+                    content="C'est quoi la météo le 16/12/2025 à Paris saint-lazare ? Triple cette valeur."
+                )
+            ]
+        }
+    )
+
     print("\n" + "=" * 50)
     print("📤 Réponse finale:")
     print(result["messages"][-1].content)

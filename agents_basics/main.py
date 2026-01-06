@@ -17,7 +17,7 @@ def main():
     print("start...")
 
     llm = ChatOpenAI(temperature=0, model="gpt-4o")
-    
+
     # agent python
     python_agent_instructions = """You are a Python code execution agent. 
     IMPORTANT: You MUST use the python_repl tool to execute code. Never just describe code - EXECUTE it.
@@ -44,7 +44,7 @@ def main():
         llm=llm,
         path=str(SCRIPT_DIR / "projets_lpb.csv"),
         verbose=True,
-        allow_dangerous_code=True
+        allow_dangerous_code=True,
     )
 
     # agent rooter
@@ -62,15 +62,15 @@ def main():
     # without that, the rooter agent will not now which tool use
     router_tools = [
         Tool(
-            name="python_agent",  
+            name="python_agent",
             func=run_python_agent,
-            description="Useful when you need to transform natural language to python and execute python code, returning the results of the code execution. DOES NOT ACCEPT CODE AS INPUT."
+            description="Useful when you need to transform natural language to python and execute python code, returning the results of the code execution. DOES NOT ACCEPT CODE AS INPUT.",
         ),
         Tool(
-            name="csv_agent",  
+            name="csv_agent",
             func=run_csv_agent,
-            description="Useful when you need to answer questions over the CSV file 'projets_lpb.csv'. Takes the entire question as input and returns the answer after running pandas calculations."
-        )
+            description="Useful when you need to answer questions over the CSV file 'projets_lpb.csv'. Takes the entire question as input and returns the answer after running pandas calculations.",
+        ),
     ]
 
     router_instructions = """You are a supervisor agent that delegates tasks to specialized agents.
@@ -87,11 +87,17 @@ def main():
         prompt=router_instructions,
     )
 
-
-    result = router_agent.invoke({
-        "messages": [("human", "génère 2 qr codes qui envoie sur la page https://www.linkedin.com/in/yacin-christian-baltagi/, tu as accès à la bibliotheque python qr code, sauvegarde les images dans le répertoire courant")]
-        # "Quel est le type de projet qui revient le plus souvent ?"
-    })
+    result = router_agent.invoke(
+        {
+            "messages": [
+                (
+                    "human",
+                    "génère 2 qr codes qui envoie sur la page https://www.linkedin.com/in/yacin-christian-baltagi/, tu as accès à la bibliotheque python qr code, sauvegarde les images dans le répertoire courant",
+                )
+            ]
+            # "Quel est le type de projet qui revient le plus souvent ?"
+        }
+    )
 
     print("\n" + "=" * 50)
     print("FINAL RESPONSE:")
